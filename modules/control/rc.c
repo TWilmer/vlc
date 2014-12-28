@@ -422,8 +422,16 @@ static void RegisterCallbacks( intf_thread_t *p_intf )
     ADD( "title_n", VOID, Input )
     ADD( "title_p", VOID, Input )
     ADD( "chapter", STRING, Input )
-    ADD( "chapter_n", VOID, Input )
+    ADD( "right", VOID, Input )
     ADD( "chapter_p", VOID, Input )
+    ADD( "menu", VOID, Input )
+    ADD( "root", VOID, Input )
+    ADD( "dvd_next", VOID, Input )
+    ADD( "up", VOID, Input )
+    ADD( "down", VOID, Input )
+    ADD( "left", VOID, Input )
+    ADD( "right", VOID, Input )
+    ADD( "activate", VOID, Input )
 
     ADD( "fastforward", VOID, Input )
     ADD( "rewind", VOID, Input )
@@ -797,9 +805,17 @@ static void Help( intf_thread_t *p_intf)
     msg_rc("%s", _("| title [X]  . . . . . . set/get title in current item"));
     msg_rc("%s", _("| title_n  . . . . . . . .  next title in current item"));
     msg_rc("%s", _("| title_p  . . . . . .  previous title in current item"));
-    msg_rc("%s", _("| chapter [X]  . . . . set/get chapter in current item"));
+    msg_rc("%s", _("| chapter [X]  . HELLO.set/get chapter in current item"));
     msg_rc("%s", _("| chapter_n  . . . . . .  next chapter in current item"));
     msg_rc("%s", _("| chapter_p  . . . .  previous chapter in current item"));
+    msg_rc("%s", _("| root . . . . . . . . . . . . . . . .  show root menu"));
+    msg_rc("%s", _("| menu . . . . . . . . . . . . . . . . . .  show menu "));
+    msg_rc("%s", _("| dvd_next . . . . .  previous chapter in current item"));
+    msg_rc("%s", _("| up . . . . . . . . . . . . . . . . up selection item"));
+    msg_rc("%s", _("| down . . . . . . . . . . . . . . down selection item"));
+    msg_rc("%s", _("| left . . . . . . . . . . . . . . left selection item"));
+    msg_rc("%s", _("| right  . . . . . . . . . . . .  right selection item"));
+    msg_rc("%s", _("| activate . . . . . . . . . .  activate selected item"));
     msg_rc(  "| ");
     msg_rc("%s", _("| seek X . . . seek in seconds, for instance `seek 12'"));
     msg_rc("%s", _("| pause  . . . . . . . . . . . . . . . .  toggle pause"));
@@ -1084,6 +1100,41 @@ static int Input( vlc_object_t *p_this, char const *psz_cmd,
             var_TriggerCallback( p_input, "prev-title" );
 
         i_error = VLC_SUCCESS;
+    }
+    else if( !strcmp( psz_cmd, "menu" ) )
+    {
+       var_TriggerCallback( p_input, "menu" );
+    }
+    else if( !strcmp( psz_cmd, "activate" ) )
+    {
+          if( p_input )
+                input_Control( p_input, INPUT_NAV_ACTIVATE, NULL );
+    }
+    else if( !strcmp( psz_cmd, "up" ) )
+    {
+          if( p_input )
+                input_Control( p_input, INPUT_NAV_UP, NULL );
+    }
+    else if( !strcmp( psz_cmd, "down" ) )
+    {
+          if( p_input )
+                input_Control( p_input, INPUT_NAV_DOWN, NULL );
+    }
+    else if( !strcmp( psz_cmd, "left" ) )
+    {
+          if( p_input )
+                input_Control( p_input, INPUT_NAV_LEFT, NULL );
+    }
+    else if( !strcmp( psz_cmd, "right" ) )
+    {
+          if( p_input )
+                input_Control( p_input, INPUT_NAV_RIGHT, NULL );
+    }
+    else if( !strcmp( psz_cmd, "menu" ) )
+    {
+      if( p_input )
+                var_SetInteger( p_input, "title  0", 2 );
+
     }
     else if(    !strcmp( psz_cmd, "atrack" )
              || !strcmp( psz_cmd, "vtrack" )
