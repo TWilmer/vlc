@@ -1,4 +1,4 @@
-/*****************************************************************************
+/*****************************************************************************  
  * dbus_player.c : dbus control module (mpris v2.2) - Player object
  *****************************************************************************
  * Copyright © 2006-2011 Rafaël Carré
@@ -61,6 +61,110 @@ MarshalPosition( intf_thread_t *p_intf, DBusMessageIter *container )
     return VLC_SUCCESS;
 }
 
+static int
+MarshalLength( intf_thread_t *p_intf, DBusMessageIter *container )
+{
+    /* returns position in microseconds */
+    dbus_int64_t i_pos;
+    input_thread_t *p_input = pl_CurrentInput( p_intf );
+
+    if( !p_input )
+        i_pos = 0;
+
+    else
+    {
+        i_pos = var_GetTime( p_input, "time" );
+
+        vlc_value_t time;
+        var_Get( p_input, "length", &time );
+        //i_pos = time.i_time / 1000000;
+        i_pos = time.i_time ;
+
+        vlc_object_release( p_input );
+    }
+
+    if( !dbus_message_iter_append_basic( container, DBUS_TYPE_INT64, &i_pos ) )
+        return VLC_ENOMEM;
+
+    return VLC_SUCCESS;
+}
+
+
+static int
+MarshalTrack(intf_thread_t *p_intf, DBusMessageIter *container )
+{
+    dbus_int32_t i_track;
+
+    input_thread_t *p_input = pl_CurrentInput( p_intf );
+
+    if( !p_input )
+        i_track = 0;
+
+    else
+    {
+              i_track = var_GetInteger( p_input, "title" );
+       vlc_object_release( p_input );
+    }
+      if( !dbus_message_iter_append_basic( container, DBUS_TYPE_INT32, &i_track ) )
+        return VLC_ENOMEM;
+
+     return VLC_SUCCESS;
+}
+static int
+MarshalChapter(intf_thread_t *p_intf, DBusMessageIter *container )
+{
+    dbus_int32_t i_track=0;
+
+    input_thread_t *p_input = pl_CurrentInput( p_intf );
+
+    if( !p_input )
+        i_track = 0;
+
+    else
+    {
+              i_track = var_GetInteger( p_input, "chapter" );
+                // int i_chapter_count = var_CountChoices( p_input, "chapter" );
+       vlc_object_release( p_input );
+    }
+      if( !dbus_message_iter_append_basic( container, DBUS_TYPE_INT32, &i_track ) )
+        return VLC_ENOMEM;
+
+     return VLC_SUCCESS;
+}
+static int
+MarshalTitle(intf_thread_t *p_intf, DBusMessageIter *container )
+{
+    char * c_title;
+
+    input_thread_t *p_input = pl_CurrentInput( p_intf );
+
+    if( !p_input )
+        c_title = "Error:Unkown" ;
+
+    else
+    {
+
+  if( -1 == asprintf( &c_title,
+                                "Title %d",
+                                0 ) )
+            {
+                vlc_object_release( p_input );
+                return VLC_ENOMEM;
+
+           }
+
+      if( !dbus_message_iter_append_basic( container, DBUS_TYPE_STRING, &c_title ) )
+        return VLC_ENOMEM;
+            free( c_title );
+
+       vlc_object_release( p_input );
+    }
+
+     return VLC_SUCCESS;
+}
+
+
+
 DBUS_METHOD( SetPosition )
 { /* set position in microseconds */
 
@@ -98,13 +202,14 @@ DBUS_METHOD( SetPosition )
             {
                 vlc_object_release( p_input );
                 return DBUS_HANDLER_RESULT_NEED_MEMORY;
-            }
 
-            if( !strcmp( psz_trackid, psz_dbus_trackid ) )
-            {
+           }
+
+// we want to change the position of the current track,
+// the interface has no proper way to get the current p_item->i_id
+
                 position.i_time = (mtime_t) i_pos;
                 var_Set( p_input, "time", position );
-            }
             free( psz_trackid );
         }
 
@@ -217,6 +322,313 @@ DBUS_METHOD( Play )
 
     REPLY_SEND;
 }
+DBUS_METHOD( Up )
+{
+    REPLY_INIT;
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+
+    if( p_input )
+       input_Control( p_input, INPUT_NAV_UP, NULL );
+
+
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+DBUS_METHOD( Down ) 
+{
+    REPLY_INIT;
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+
+    if( p_input )
+       input_Control( p_input, INPUT_NAV_DOWN, NULL );
+    
+    
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+DBUS_METHOD( Left ) 
+{
+    REPLY_INIT;
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+    if( p_input )
+       input_Control( p_input, INPUT_NAV_LEFT, NULL );
+
+    
+    
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+DBUS_METHOD( Right ) 
+{
+    REPLY_INIT;
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+
+    if( p_input )
+       input_Control( p_input, INPUT_NAV_RIGHT, NULL );
+    
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+
+DBUS_METHOD( Menu ) 
+{
+    REPLY_INIT;
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+    
+    if( p_input )
+                var_SetInteger( p_input, "title  0", 2 );
+    
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+DBUS_METHOD( Root ) 
+{
+    REPLY_INIT;
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+
+    if( p_input )
+                var_SetInteger( p_input, "title  0", 2 );
+
+    
+    
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+
+
+
+DBUS_METHOD( Activate )
+{
+    REPLY_INIT;
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+
+    if( p_input )
+      input_Control( p_input, INPUT_NAV_ACTIVATE, NULL );
+
+   
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+
+DBUS_METHOD( Eject )
+{
+    REPLY_INIT;
+    playlist_Stop( PL );
+
+
+
+    REPLY_SEND;
+}
+DBUS_METHOD( SetAudioTrack )
+{
+    REPLY_INIT;
+
+    dbus_int64_t i_track;
+    char  *psz_dbus_trackid;
+
+    DBusError error;
+    dbus_error_init( &error );
+
+    dbus_message_get_args( p_from, &error,
+            DBUS_TYPE_INT64, &i_track,
+            DBUS_TYPE_INVALID );
+
+    if( dbus_error_is_set( &error ) )
+    {
+        msg_Err( (vlc_object_t*) p_this, "D-Bus message reading : %s",
+                error.message );
+        dbus_error_free( &error );
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+
+     var_SetInteger( p_input, "audio-es", i_track     );
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+DBUS_METHOD( SetSubtitleTrack )
+{
+    REPLY_INIT;
+
+    dbus_int64_t i_track;
+    char  *psz_dbus_trackid;
+
+    DBusError error;
+    dbus_error_init( &error );
+
+    dbus_message_get_args( p_from, &error,
+            DBUS_TYPE_INT64, &i_track,
+            DBUS_TYPE_INVALID );
+
+    if( dbus_error_is_set( &error ) )
+    {
+        msg_Err( (vlc_object_t*) p_this, "D-Bus message reading : %s",
+                error.message );
+        dbus_error_free( &error );
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+
+     var_SetInteger( p_input, "spu-es", i_track     );
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+
+DBUS_METHOD( GetSubtitleTrack )
+{
+    REPLY_INIT;
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+    int i_value;
+    printf("GetSubtitleTrack\n");
+    vlc_value_t val, text;
+    if ( var_Get( p_input, "spu-es", &val ) < 0 )
+    {
+    }
+            i_value = val.i_int;
+
+    if ( var_Change( p_input, "spu-es",
+                             VLC_VAR_GETLIST, &val, &text ) < 0 )
+    {
+    }
+    int lenSafe=2048;
+    int totalLen=lenSafe;
+    char outputString[totalLen];
+    lenSafe=lenSafe-1;
+    int offset=0;
+    int i; 
+
+            for ( i = 0; i < val.p_list->i_count; i++ )
+            {
+                lenSafe=totalLen- offset;
+                if ( i_value == val.p_list->p_values[i].i_int )
+                    offset+=snprintf(outputString+offset,lenSafe, "|%lld:%s*",
+                            val.p_list->p_values[i].i_int,
+                            text.p_list->p_values[i].psz_string );
+                else
+                    offset+=snprintf(outputString+offset,lenSafe, "|%lld:%s",
+                            val.p_list->p_values[i].i_int,
+                            text.p_list->p_values[i].psz_string );
+    printf("GetSubtitleTrack %lld %s\n",  val.p_list->p_values[i].i_int,
+                            text.p_list->p_values[i].psz_string );
+            }
+    outputString[offset]=0;
+    printf("End of String is %d OK\n", offset);
+    printf("String is %s\n", outputString);
+
+    var_FreeList( &val, &text );
+    printf("Freeed\n");
+
+
+    printf("reply init\n");
+    OUT_ARGUMENTS;
+char *psz_identity;
+if( asprintf( &psz_identity, "%s", outputString) != -1 )
+{
+    printf("reply out argument\n");
+    printf("reply out argumento %s\n",psz_identity);
+    ADD_STRING( &psz_identity );
+    free( psz_identity );
+}
+else
+return DBUS_HANDLER_RESULT_NEED_MEMORY;
+    printf("vlc_object_release ");
+
+    if( p_input )
+        vlc_object_release( p_input );
+
+
+    printf("reply sent1n");
+    REPLY_SEND;
+    printf("reply sent\n");
+}
+DBUS_METHOD( GetAudioTrack )
+{
+
+    REPLY_INIT;
+    input_thread_t *p_input =  pl_CurrentInput( p_this );
+    int i_value;
+    printf("GetSubtitleTrack\n");
+    vlc_value_t val, text;
+    if ( var_Get( p_input, "audio-es", &val ) < 0 )
+    {
+    }
+            i_value = val.i_int;
+
+    if ( var_Change( p_input, "audio-es",
+                             VLC_VAR_GETLIST, &val, &text ) < 0 )
+    {
+    }
+    int lenSafe=2048;
+    int totalLen=lenSafe;
+    char outputString[totalLen];
+    lenSafe=lenSafe-1;
+    int offset=0;
+    int i; 
+
+            for ( i = 0; i < val.p_list->i_count; i++ )
+            {
+                lenSafe=totalLen- offset;
+                if ( i_value == val.p_list->p_values[i].i_int )
+                    offset+=snprintf(outputString+offset,lenSafe, "|%lld:%s*",
+                            val.p_list->p_values[i].i_int,
+                            text.p_list->p_values[i].psz_string );
+                else
+                    offset+=snprintf(outputString+offset,lenSafe, "|%lld:%s",
+                            val.p_list->p_values[i].i_int,
+                            text.p_list->p_values[i].psz_string );
+    printf("GetSubtitleTrack %lld %s\n",  val.p_list->p_values[i].i_int,
+                            text.p_list->p_values[i].psz_string );
+            }
+    outputString[offset]=0;
+    printf("End of String is %d OK\n", offset);
+    printf("String is %s\n", outputString);
+
+    var_FreeList( &val, &text );
+    printf("Freeed\n");
+
+
+    printf("reply init\n");
+    OUT_ARGUMENTS;
+char *psz_identity;
+if( asprintf( &psz_identity, "%s", outputString) != -1 )
+{
+    printf("reply out argument\n");
+    printf("reply out argumento %s\n",psz_identity);
+    ADD_STRING( &psz_identity );
+    free( psz_identity );
+}
+else
+return DBUS_HANDLER_RESULT_NEED_MEMORY;
+    printf("vlc_object_release ");
+
+    if( p_input )
+        vlc_object_release( p_input );
+
+
+    printf("reply sent1n");
+    REPLY_SEND;
+    printf("reply sent\n");
+}
 
 DBUS_METHOD( Pause )
 {
@@ -231,6 +643,50 @@ DBUS_METHOD( Pause )
 
     REPLY_SEND;
 }
+DBUS_METHOD( ChapterP )
+{
+    REPLY_INIT;
+    input_thread_t *p_input = pl_CurrentInput( p_this );
+            var_TriggerCallback( p_input, "prev-chapter" );
+
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+DBUS_METHOD( ChapterN )
+{
+    REPLY_INIT;
+    input_thread_t *p_input = pl_CurrentInput( p_this );
+            var_TriggerCallback( p_input, "next-chapter" );
+
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+DBUS_METHOD( TitleN )
+{
+    REPLY_INIT;
+    input_thread_t *p_input = pl_CurrentInput( p_this );
+            var_TriggerCallback( p_input, "next-title" );
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+DBUS_METHOD( TitleP )
+{
+    REPLY_INIT;
+    input_thread_t *p_input = pl_CurrentInput( p_this );
+            var_TriggerCallback( p_input, "prev-title" );
+    if( p_input )
+        vlc_object_release( p_input );
+
+    REPLY_SEND;
+}
+
+
 
 DBUS_METHOD( PlayPause )
 {
@@ -659,6 +1115,10 @@ DBUS_METHOD( GetProperty )
     PROPERTY_MAPPING_BEGIN
     PROPERTY_GET_FUNC( Metadata,       "a{sv}" )
     PROPERTY_GET_FUNC( Position,       "x" )
+    PROPERTY_GET_FUNC( Length,         "x" )
+    PROPERTY_GET_FUNC( Track,          "i" )
+    PROPERTY_GET_FUNC( Chapter,        "i" )
+    PROPERTY_GET_FUNC( Title,          "s" )
     PROPERTY_GET_FUNC( PlaybackStatus, "s" )
     PROPERTY_GET_FUNC( LoopStatus,     "s" )
     PROPERTY_GET_FUNC( Shuffle,        "b" )
@@ -748,6 +1208,7 @@ DBUS_METHOD( GetAllProperties )
 
     ADD_PROPERTY ( Metadata,       "a{sv}" );
     ADD_PROPERTY ( Position,       "x"     );
+    ADD_PROPERTY ( Length,         "x"     );
     ADD_PROPERTY ( PlaybackStatus, "s"     );
     ADD_PROPERTY ( LoopStatus,     "s"     );
     ADD_PROPERTY ( Shuffle,        "b"     );
@@ -789,10 +1250,27 @@ handle_player ( DBusConnection *p_conn, DBusMessage *p_from, void *p_this )
     METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Stop",         Stop );
     METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Seek",         Seek );
     METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Play",         Play );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Left",         Left );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Right",        Right );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Up",           Up );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Down",         Down );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Menu",         Menu );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Root",         Root );
     METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Pause",        Pause );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "ChapterN",     ChapterN );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "ChapterP",     ChapterP );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "TitleP",       TitleP );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "TitleN",       TitleN );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Eject",        Eject );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "Activate",     Activate);
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "GetSubtitleTrack", GetSubtitleTrack );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "SetSubtitleTrack", SetSubtitleTrack );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "GetAudioTrack",    GetAudioTrack );
+    METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "SetAudioTrack",    SetAudioTrack );
     METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "PlayPause",    PlayPause );
     METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "OpenUri",      OpenUri );
     METHOD_FUNC( DBUS_MPRIS_PLAYER_INTERFACE, "SetPosition",  SetPosition );
+
 
     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }

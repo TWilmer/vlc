@@ -1,4 +1,7 @@
 #/usr/local/vlc/bin/vlc-wrapper /video/2.mp4  dvdnav://dev/sr0   --vout omxil_out --codec omxil   -I http --http-host 192.168.1.100:8080 --http-password test --extraintf oldrc  --rc-host localhost:4000
+#  dbus-send  --print-reply --dest=org.mpris.MediaPlayer2.vlc /org/mpris/MediaPlayer2  org.freedesktop.DBus.Introspectable.Introspect 
+#  dbusxx-xml2cpp  org.mpris.MediaPlayer2.vlc.xml --proxy=org.mpris.MediaPlayer2.vlc.h
+
 /usr/local/vlc/bin/vlc dvdnav://dev/sr0  --vout omxil_vout --codec omxil -I http --http-host 192.168.1.100:8080 --http-password test --extraintf oldrc   --rc-host localhost:4000 
 
 #/usr/local/vlc/bin/vlc dvdnav://dev/sr0 /video/2.mp4 /video/FCMS-6ae7ca0b-05c4-4a94-b87c-5350e3407737-2cc6c1c1f632_6a.mp4 /video/maus1.mp4 /video/maus2.mp4 /video/maus3.mp4 /video/maus4.mp4 /video/tatort_stuttgart_frage_des_gewissen.mp4 /video/tatort_stuttgart_frage_des_gewissen.mp4.sub /video/tatort_stuttgart_frage_des_gewissen.mp4.sub.en /video/tatort_stuttgart_frage_des_gewissen.mp4.sub.en~ /video/tatort_stuttgart_frage_des_gewissen_mp4_sub_en_sub.srt /video/wget-log /video/wget-log.1 --vout omxil_vout --codec omxil -I http --http-host 192.168.1.100:8080 --http-password test --extraintf oldrc   --rc-host localhost:4000 
